@@ -4,17 +4,16 @@
 Reads values from `one_time_setup_config.yaml` and updates files accordingly.
 Safe to run once on a fresh clone of this template. Make sure your working tree is clean.
 """
-from __future__ import annotations
 
 import re
 import sys
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Optional
+from typing import Callable, Optional
 
 try:
-    import yaml  # type: ignore
-except Exception as exc:  # pragma: no cover
+    import yaml
+except Exception:
     print("ERROR: This script requires PyYAML. Install with: pip install pyyaml", file=sys.stderr)
     raise
 
@@ -51,7 +50,7 @@ class SetupConfig:
             description=require("description"),
             url=require("url"),
             author=require("author"),
-            author_email=str(data.get("author_email") or "" ) or None,
+            author_email=str(data.get("author_email") or "") or None,
             python_min_version=require("python_min_version"),
             version=require("version"),
             default_branch=require("default_branch"),
@@ -80,11 +79,13 @@ def rename_package_dir(current: str, new: str) -> None:
         # Already renamed or template changed; nothing to do
         return
     if dst.exists():
-        raise FileExistsError(f"Target package directory already exists: {dst}")
+        # Target already exists; skip rename and continue so references are updated
+        print(f"NOTE: Target package directory already exists: {dst}. Skipping rename and continuing.")
+        return
     src.rename(dst)
 
 
-def rewrite_file(path: Path, transform: callable[[str], str]) -> None:
+def rewrite_file(path: Path, transform: Callable[[str], str]) -> None:
     text = path.read_text(encoding="utf-8")
     new_text = transform(text)
     if text != new_text:
@@ -100,21 +101,28 @@ def update_setup_py(cfg: SetupConfig) -> None:
         s = re.sub(r'name\s*=\s*"[^"]*"', f'name="{cfg.distribution_name}"', s)
         s = re.sub(r'description\s*=\s*"[^"]*"', f'description="{cfg.description}"', s)
         s = re.sub(r'author\s*=\s*"[^"]*"', f'author="{cfg.author}"', s)
+        # author_email: replace if present, otherwise insert after author line
         if cfg.author_email:
-            if "author_email" in s:
-                s = re.sub(r'author_email\s*=\s*"[^"]*"', f'author_email="{cfg.author_email}"', s)
+            if re.search(r'author_email\s*=\s*"[^"]*"', s):
+                s = re.sub(
+                    r'author_email\s*=\s*"[^"]*"',
+                    lambda _m: f'author_email="{cfg.author_email}"',
+                    s,
+                )
             else:
-                # Insert author_email after author
                 s = re.sub(
                     r'(author\s*=\s*"[^"]*",\n)',
-                    r"\1    author_email=\"" + re.escape(cfg.author_email) + r"\",\n",
+                    lambda m: m.group(1) + f'    author_email="{cfg.author_email}",\n',
                     s,
+                    count=1,
                 )
         s = re.sub(r'url\s*=\s*"[^"]*"', f'url="{cfg.url}"', s)
         s = re.sub(r'python_requires\s*=\s*"[^"]*"', f'python_requires=">={cfg.python_min_version}"', s)
         # Update template_package path references to new import_name
         s = s.replace('"template_package/requirements.txt"', f'"{cfg.import_name}/requirements.txt"')
         s = s.replace('"template_package/__init__.py"', f'"{cfg.import_name}/__init__.py"')
+        # Also fix the assert message path if present
+        s = s.replace("template_package/__init__.py", f"{cfg.import_name}/__init__.py")
         return s
 
     rewrite_file(path, _x)
@@ -130,7 +138,7 @@ def update_pyproject_toml(cfg: SetupConfig) -> None:
     def _x(s: str) -> str:
         s = re.sub(r'target-version\s*=\s*"[^"]*"', f'target-version = "{tgt}"', s)
         s = re.sub(
-            r'known-first-party\s*=\s*\[[^\]]*\]',
+            r"known-first-party\s*=\s*\[[^\]]*\]",
             f'known-first-party = ["{cfg.import_name}", "tests"]',
             s,
         )
@@ -194,11 +202,13 @@ def update_workflows(cfg: SetupConfig) -> None:
         path = workflows_dir / name
         if not path.exists():
             continue
+
         def _x(s: str) -> str:
             s = fix_python_version(s)
             if name == "test.yml":
                 s = fix_default_branch(s)
             return s
+
         rewrite_file(path, _x)
 
 
@@ -236,4 +246,4 @@ def main() -> None:
 
 
 if __name__ == "__main__":  # pragma: no cover
-    main() 
+    main()
