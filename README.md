@@ -8,7 +8,7 @@ Once you get things working, the repo will already be in the correct format to b
 
 Just follow the instructions below to set up your new repository.
 
-In the root folder, you can run `make format` and `make static-checks` for the formatting and static type checking respectively.
+After setting things up, you can run `make format` and `make static-checks` in the root folder for the formatting and static type checking respectively.
 
 # Installation
 
