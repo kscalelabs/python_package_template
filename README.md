@@ -20,7 +20,7 @@ The structure of the template is as follows:
 ├── pyproject.toml
 ├── README.md
 ├── setup.py
-├── template_package
+├── template_package # <-- Your code goes in here after setup!
 │   ├── __init__.py
 │   ├── py.typed
 │   └── requirements.txt
