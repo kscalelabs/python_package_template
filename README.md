@@ -10,6 +10,27 @@ Just follow the instructions below to set up your new repository.
 
 After setting things up, you can run `make format` and `make static-checks` in the root folder for the formatting and static type checking respectively.
 
+The structure of the template is as follows:
+```bash
+├── LICENSE
+├── Makefile
+├── MANIFEST.in
+├── one_time_setup_config.yaml
+├── one_time_setup.py
+├── pyproject.toml
+├── README.md
+├── setup.py
+├── template_package
+│   ├── __init__.py
+│   ├── py.typed
+│   └── requirements.txt
+└── tests
+    ├── conftest.py
+    └── test_dummy.py
+
+3 directories, 13 files
+```
+
 # Installation
 
 ## Option 1 (recommended): One-time config + script
