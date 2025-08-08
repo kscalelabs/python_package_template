@@ -1,6 +1,16 @@
 # Using this template
 
-Choose one of the following to set up your new repository.
+You can use this template repo to easily make a python package!
+
+It has some useful features like Makefiles for formatting and static-checks, as well as an automatic Github CI/CD config.
+
+Once you get things working, the repo will already be in the correct format to be published to [pypi.org](https://pypi.org/).
+
+Just follow the instructions below to set up your new repository.
+
+In the root folder, you can run `make format` and `make static-checks` for the formatting and static type checking respectively.
+
+# Installation
 
 ## Option 1 (recommended): One-time config + script
 
