@@ -59,7 +59,7 @@ The structure of the template is as follows:
 - Requires PyYAML.
 - Review and commit the changes when satisfied.
 
-(Optional) After completing setup you may remove `one_time_setup.py` and `one_time_setup_config.yaml`.
+After completing setup you may remove `one_time_setup.py` and `one_time_setup_config.yaml`.
 
 ## Option 2: Manual setup
 
